@@ -17,4 +17,6 @@ urlpatterns = [
     path('recommend-movies/',recommend_movies,name='recommend_movies'),
     path('add-movie-rating/', views.add_movie_rating, name='add_movie_rating'),
     path('filter-movi/', views.filter_movies, name='filter_movies'),
+    path('admin-login/',views.admin_login,name='admin_login'),
+    path('admin-dashboard/',views.admin_dashboard,name='admin_dashboard'),
 ]

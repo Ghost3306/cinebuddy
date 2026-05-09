@@ -2,6 +2,31 @@ import json
 from django.http import JsonResponse,HttpResponse
 from .models import Users,MovieReview,GenreSearchHistory
 from django.views.decorators.csrf import csrf_exempt
+
+
+from .models import ApiTracking
+
+def track_api(
+    request,
+    api_name,
+    request_data=None,
+    response_status="success",
+    user=None
+):
+
+    ip = request.META.get('REMOTE_ADDR')
+
+    ApiTracking.objects.create(
+        api_name=api_name,
+        user=user,
+        request_method=request.method,
+        request_data=str(request_data),
+        response_status=response_status,
+        ip_address=ip
+    )
+
+
+
 @csrf_exempt
 def register_user(request):
     if request.method == 'POST':
@@ -29,14 +54,26 @@ def register_user(request):
                 email=email,
                 password=password
             )
-
+            track_api(
+                request=request,
+                api_name="register_user",
+                request_data=data,
+                response_status="success",
+                user=user
+            )
             return JsonResponse({
                 'status': 'success',
                 'message': 'User registered successfully',
                 'user_id': str(user.uid)
             })
-
+        
         except Exception as e:
+            track_api(
+                request=request,
+                api_name="register_user",
+                request_data=data if 'data' in locals() else None,
+                response_status=f"failed: {str(e)}"
+            )
             return JsonResponse({
                 'status': 'error',
                 'message': str(e)
@@ -71,7 +108,13 @@ def login_user(request):
                     'status': 'error',
                     'message': 'Invalid email or password'
                 })
-
+            track_api(
+                request=request,
+                api_name="login_user",
+                request_data=data,
+                response_status="success",
+                user=user
+            )
             return JsonResponse({
                 'uuid':user.uid,
                 'name':user.name,
@@ -80,6 +123,12 @@ def login_user(request):
             })
 
         except Exception as e:
+            track_api(
+                request=request,
+                api_name="login_user",
+                request_data=data if 'data' in locals() else None,
+                response_status=f"failed: {str(e)}"
+            )
             return JsonResponse({
                 'status': 'error',
                 'message': str(e)
@@ -131,6 +180,13 @@ def add_movie_review(request):
                 description=description
             )
 
+            track_api(
+                request=request,
+                api_name="add_movie_review",
+                request_data=data,
+                response_status="success",
+                user=user
+            )
             return JsonResponse({
                 'status': 'success',
                 'message': 'Movie review added successfully',
@@ -138,6 +194,12 @@ def add_movie_review(request):
             })
 
         except Exception as e:
+            track_api(
+                request=request,
+                api_name="add_movie_review",
+                request_data=data if 'data' in locals() else None,
+                response_status=f"failed: {str(e)}"
+            )
             return JsonResponse({
                 'status': 'error',
                 'message': str(e)
@@ -164,11 +226,21 @@ def delete_movie_review(request, review_id):
                 })
 
             movie_review.delete()
-
+            track_api(
+                request=request,
+                api_name="delete_movie_review",
+                request_data={
+                    "review_id": review_id
+                },
+                response_status="success",
+                user=movie_review.user
+            )
             return JsonResponse({
                 'status': 'success',
                 'message': 'Review deleted successfully'
             })
+            
+
 
         except Exception as e:
             return JsonResponse({
@@ -212,6 +284,14 @@ def add_genre_search_history(request):
                 user=user,
                 genre_name=genre_name
             )
+            track_api(
+                request=request,
+                api_name="add_genre_search_history",
+                request_data=data,
+                response_status="success",
+                user=user
+            )
+
 
             return JsonResponse({
                 'status': 'success',
@@ -220,6 +300,12 @@ def add_genre_search_history(request):
             })
 
         except Exception as e:
+            track_api(
+                request=request,
+                api_name="add_genre_search_history",
+                request_data=data if 'data' in locals() else None,
+                response_status=f"failed: {str(e)}"
+            )
             return JsonResponse({
                 'status': 'error',
                 'message': str(e)
@@ -264,7 +350,15 @@ def get_user_data(request, user_id):
                     'genre_name': genre.genre_name,
                     'searched_at': genre.searched_at
                 })
-
+            track_api(
+                request=request,
+                api_name="get_user_data",
+                request_data={
+                    "user_id": user_id
+                },
+                response_status="success",
+                user=user
+            )
             return JsonResponse({
                 'status': 'success',
                 'user_id': str(user.uid),
@@ -275,6 +369,12 @@ def get_user_data(request, user_id):
             })
 
         except Exception as e:
+            track_api(
+                request=request,
+                api_name="get_user_data",
+                request_data=data if 'data' in locals() else None,
+                response_status=f"failed: {str(e)}"
+            )
             return JsonResponse({
                 'status': 'error',
                 'message': str(e)
@@ -651,7 +751,13 @@ def recommend_movies(request):
                     "score": round(float(row["score"]), 4),
                     "final_score": round(float(row["final_score"]), 4)
                 })
-
+            track_api(
+                request=request,
+                api_name="recommend_movies",
+                request_data=data,
+                response_status="success",
+                user=user if user_id else None
+            )
             return JsonResponse({
                 "status": "success",
                 "count": len(results),
@@ -659,6 +765,12 @@ def recommend_movies(request):
             })
 
         except Exception as e:
+            track_api(
+                request=request,
+                api_name="recommend_movies",
+                request_data=data if 'data' in locals() else None,
+                response_status=f"failed: {str(e)}"
+            )
             print("Recommendation error:", str(e))
 
             return JsonResponse({
@@ -710,6 +822,13 @@ def add_movie_rating(request):
                 rating=rating,
                 review=review
             )
+            track_api(
+                request=request,
+                api_name="add_genre_search_history",
+                request_data=data,
+                response_status="success",
+                user=user
+            )
 
             return JsonResponse({
                 "status": "success",
@@ -718,6 +837,12 @@ def add_movie_rating(request):
             })
 
         except Exception as e:
+            track_api(
+                request=request,
+                api_name="add_genre_search_history",
+                request_data=data if 'data' in locals() else None,
+                response_status=f"failed: {str(e)}"
+            )
             return JsonResponse({
                 "status": "error",
                 "message": str(e)
@@ -849,6 +974,12 @@ def filter_movies(request):
                     "backdrop_path": backdrop_url,
                     "score": float(movie["score"]) if pd.notna(movie["score"]) else 0.0
                 })
+            track_api(
+                request=request,
+                api_name="filter_movies",
+                request_data=data,
+                response_status="success"
+            )
 
             return JsonResponse({
                 "status": "success",
@@ -857,6 +988,12 @@ def filter_movies(request):
             })
 
         except Exception as e:
+            track_api(
+            request=request,
+            api_name="filter_movies",
+            request_data=data if 'data' in locals() else None,
+            response_status=f"failed: {str(e)}"
+        )
             return JsonResponse({
                 "status": "error",
                 "message": str(e)
@@ -868,3 +1005,194 @@ def filter_movies(request):
     })
 
 
+
+
+
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin"
+
+def admin_login(request):
+
+    if request.method == "POST":
+
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        if (
+            username == ADMIN_USERNAME and
+            password == ADMIN_PASSWORD
+        ):
+
+            request.session["admin_logged_in"] = True
+
+            return redirect("admin_dashboard")
+
+        else:
+            messages.error(
+                request,
+                "Invalid username or password"
+            )
+
+    return render(
+        request,
+        "admin_login.html"
+    )
+
+import csv
+import os
+
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.db.models import Count
+from .models import GenreStatistic
+from .models import Users, MovieReview, ApiTracking
+
+
+def admin_dashboard(request):
+
+    # =========================
+    # ADMIN SESSION CHECK
+    # =========================
+
+    if not request.session.get("admin_logged_in"):
+        return redirect("admin_login")
+
+    # =========================
+    # DASHBOARD STATS
+    # =========================
+
+    total_users = Users.objects.count()
+
+    total_reviews = MovieReview.objects.count()
+
+    total_api_hits = ApiTracking.objects.count()
+
+    api_data = (
+        ApiTracking.objects
+        .values("api_name")
+        .annotate(count=Count("id"))
+        .order_by("-count")
+    )
+
+    latest_logs = (
+        ApiTracking.objects
+        .all()
+        .order_by("-created_at")[:20]
+    )
+
+    # =========================
+    # CSV FILE PATH
+    # =========================
+
+    csv_path = os.path.join(
+        settings.BASE_DIR,
+        "training",
+        "movies1995-26.csv"
+    )
+
+    # =========================
+    # SEARCH MOVIES
+    # =========================
+
+    movies = []
+
+    search_query = request.GET.get("search", "").strip()
+
+    if os.path.exists(csv_path):
+
+        with open(csv_path, "r", encoding="utf-8") as file:
+
+            reader = csv.DictReader(file)
+
+            for row in reader:
+
+                # SHOW ALL MOVIES IF SEARCH EMPTY
+                if search_query == "":
+                    movies.append(row)
+
+                # FILTER MOVIES
+                elif search_query.lower() in row["title"].lower():
+                    movies.append(row)
+
+    # LIMIT DISPLAY
+    movies = movies[:8]
+
+    # =========================
+    # ADD MOVIE
+    # =========================
+
+    if request.method == "POST":
+
+        new_movie = {
+            "id": request.POST.get("id"),
+            "title": request.POST.get("title"),
+            "overview": request.POST.get("overview"),
+            "release_date": request.POST.get("release_date"),
+            "genre_ids": request.POST.get("genre_ids"),
+            "popularity": request.POST.get("popularity"),
+            "vote_average": request.POST.get("vote_average"),
+            "vote_count": request.POST.get("vote_count"),
+            "original_language": request.POST.get("original_language"),
+            "origin_country": request.POST.get("origin_country"),
+            "poster_url": request.POST.get("poster_url"),
+            "banner_url": request.POST.get("banner_url"),
+        }
+
+        file_exists = os.path.exists(csv_path)
+
+        with open(csv_path, "a", newline="", encoding="utf-8") as file:
+
+            fieldnames = [
+                "id",
+                "title",
+                "overview",
+                "release_date",
+                "genre_ids",
+                "popularity",
+                "vote_average",
+                "vote_count",
+                "original_language",
+                "origin_country",
+                "poster_url",
+                "banner_url",
+            ]
+
+            writer = csv.DictWriter(
+                file,
+                fieldnames=fieldnames
+            )
+
+            # CREATE HEADER IF FILE EMPTY
+            if os.path.getsize(csv_path) == 0:
+                writer.writeheader()
+
+            writer.writerow(new_movie)
+
+        return redirect("admin_dashboard")
+
+    # =========================
+    # CONTEXT
+    # =========================
+    genre_stats = GenreStatistic.objects.all().order_by("-total_movies")
+    context = {
+        "total_users": total_users,
+        "total_reviews": total_reviews,
+        "total_api_hits": total_api_hits,
+        "api_data": api_data,
+        "latest_logs": latest_logs,
+        "movies": movies,
+        "search_query": search_query,
+        "genre_stats": genre_stats,
+    }
+
+    return render(
+        request,
+        "admin_dashboard.html",
+        context
+    )

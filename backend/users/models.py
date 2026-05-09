@@ -81,3 +81,38 @@ class GenreStatistic(models.Model):
 
     def __str__(self):
         return f"{self.genre_name} ({self.genre_id})"
+
+class ApiTracking(models.Model):
+    api_name = models.CharField(max_length=200)
+
+    user = models.ForeignKey(
+        Users,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    request_method = models.CharField(max_length=20)
+
+    request_data = models.TextField(
+        blank=True,
+        null=True
+    )
+
+    response_status = models.CharField(
+        max_length=50,
+        default="success"
+    )
+
+    ip_address = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return f"{self.api_name} - {self.created_at}"
