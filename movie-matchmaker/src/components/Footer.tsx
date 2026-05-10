@@ -15,6 +15,10 @@ const developers = [
     name: "Prachi Adhau",
     role: "Database Developer",
   },
+      {
+    name: "Laxmikant Jalkote",
+    role: "UI/UX Designer",
+  },
 ];
 
 const Footer = () => {
@@ -32,7 +36,7 @@ const Footer = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {developers.map((developer, index) => (
             <div
               key={index}
